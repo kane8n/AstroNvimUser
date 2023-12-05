@@ -1,6 +1,22 @@
 return {
   plugins = {
     {
+      "github/copilot.vim",
+      lazy = false,
+      config = function()
+        vim.g.copilot_no_tab_map = true
+        vim.g.copilot_filetypes = { yaml = true }
+        local keymap = vim.keymap.set
+        -- https://github.com/orgs/community/discussions/29817#discussioncomment-4217615
+        keymap("i", "<C-g>", 'copilot#Accept("<CR>")',
+          { silent = true, expr = true, script = true, replace_keycodes = false })
+        keymap("i", "<C-j>", "<Plug>(copilot-next)")
+        keymap("i", "<C-k>", "<Plug>(copilot-previous)")
+        keymap("i", "<C-o>", "<Plug>(copilot-dismiss)")
+        keymap("i", "<C-s>", "<Plug>(copilot-suggest)")
+      end
+    },
+    {
       "neo-tree.nvim",
       opts = function()
         return {
@@ -35,7 +51,8 @@ return {
       opts = function(_, opts)
         local status = require("astronvim.utils.status")
 
-        opts.statusline = { -- statusline
+        opts.statusline = {
+          -- statusline
           hl = { fg = "fg", bg = "bg" },
           status.component.mode { mode_text = { padding = { left = 1, right = 1 } } },
           status.component.git_branch(),
@@ -62,6 +79,13 @@ return {
           status.component.mode { surround = { separator = "right" } },
         }
       end
+    },
+    {
+      "rust-lang/rust.vim",
+      lazy = false,
+      config = function()
+        vim.g.rustfmt_autosave = 1
+      end
     }
   },
   -- This function is run last
@@ -70,6 +94,12 @@ return {
     -- Set autocommands
     vim.api.nvim_create_autocmd("VimEnter", {
       command = "Neotree toggle",
+    })
+    vim.api.nvim_create_autocmd('BufWritePre', {
+      pattern = '*.go',
+      callback = function()
+        vim.lsp.buf.code_action({ context = { only = { 'source.organizeImports' } }, apply = true })
+      end
     })
   end
 }
